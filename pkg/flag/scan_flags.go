@@ -73,7 +73,7 @@ var (
 		ConfigName: "scan.slow",
 		Default:    false,
 		Usage:      "scan over time with lower CPU and memory utilization",
-		Deprecated: true,
+		Deprecated: `Use "--parallel 1" instead.`,
 	}
 	ParallelFlag = Flag[int]{
 		Name:       "parallel",
@@ -98,7 +98,7 @@ var (
 	}
 	IncludeDevDepsFlag = Flag[bool]{
 		Name:       "include-dev-deps",
-		ConfigName: "include-dev-deps",
+		ConfigName: "scan.include-dev-deps",
 		Usage:      "include development dependencies in the report (supported: npm, yarn)",
 	}
 )

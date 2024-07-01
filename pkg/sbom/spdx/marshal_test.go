@@ -2,22 +2,23 @@ package spdx_test
 
 import (
 	"context"
-	"github.com/aquasecurity/trivy/pkg/sbom/core"
-	"github.com/package-url/packageurl-go"
 	"hash/fnv"
 	"testing"
 	"time"
 
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/mitchellh/hashstructure/v2"
+	"github.com/package-url/packageurl-go"
 	"github.com/spdx/tools-golang/spdx"
 	"github.com/spdx/tools-golang/spdx/v2/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/trivy/pkg/clock"
+	"github.com/aquasecurity/trivy/pkg/fanal/artifact"
 	ftypes "github.com/aquasecurity/trivy/pkg/fanal/types"
 	"github.com/aquasecurity/trivy/pkg/report"
+	"github.com/aquasecurity/trivy/pkg/sbom/core"
 	tspdx "github.com/aquasecurity/trivy/pkg/sbom/spdx"
 	"github.com/aquasecurity/trivy/pkg/types"
 	"github.com/aquasecurity/trivy/pkg/uuid"
@@ -34,7 +35,7 @@ func TestMarshaler_Marshal(t *testing.T) {
 			inputReport: types.Report{
 				SchemaVersion: report.SchemaVersion,
 				ArtifactName:  "rails:latest",
-				ArtifactType:  ftypes.ArtifactContainerImage,
+				ArtifactType:  artifact.TypeContainerImage,
 				Metadata: types.Metadata{
 					Size: 1024,
 					OS: &ftypes.OS{
@@ -63,6 +64,7 @@ func TestMarshaler_Marshal(t *testing.T) {
 								Epoch:   0,
 								Arch:    "aarch64",
 								Identifier: ftypes.PkgIdentifier{
+									UID: "F4C10A4371C93487",
 									PURL: &packageurl.PackageURL{
 										Type:      packageurl.TypeRPM,
 										Namespace: "centos",
@@ -100,6 +102,7 @@ func TestMarshaler_Marshal(t *testing.T) {
 								Name:    "actionpack",
 								Version: "7.0.1",
 								Identifier: ftypes.PkgIdentifier{
+									UID: "B1A9DE534F2737AF",
 									PURL: &packageurl.PackageURL{
 										Type:    packageurl.TypeGem,
 										Name:    "actionpack",
@@ -111,6 +114,7 @@ func TestMarshaler_Marshal(t *testing.T) {
 								Name:    "actioncontroller",
 								Version: "7.0.1",
 								Identifier: ftypes.PkgIdentifier{
+									UID: "1628B51BD543965D",
 									PURL: &packageurl.PackageURL{
 										Type:    packageurl.TypeGem,
 										Name:    "actioncontroller",
@@ -129,6 +133,7 @@ func TestMarshaler_Marshal(t *testing.T) {
 								Name:    "actionpack",
 								Version: "7.0.1",
 								Identifier: ftypes.PkgIdentifier{
+									UID: "92D6B6D3FF6F8FF5",
 									PURL: &packageurl.PackageURL{
 										Type:    packageurl.TypeGem,
 										Name:    "actionpack",
@@ -358,7 +363,7 @@ func TestMarshaler_Marshal(t *testing.T) {
 			inputReport: types.Report{
 				SchemaVersion: report.SchemaVersion,
 				ArtifactName:  "centos:latest",
-				ArtifactType:  ftypes.ArtifactContainerImage,
+				ArtifactType:  artifact.TypeContainerImage,
 				Metadata: types.Metadata{
 					Size: 1024,
 					OS: &ftypes.OS{
@@ -386,6 +391,7 @@ func TestMarshaler_Marshal(t *testing.T) {
 								Epoch:   1,
 								Arch:    "aarch64",
 								Identifier: ftypes.PkgIdentifier{
+									UID: "740219943F17B1DF",
 									PURL: &packageurl.PackageURL{
 										Type:      packageurl.TypeRPM,
 										Namespace: "centos",
@@ -426,6 +432,7 @@ func TestMarshaler_Marshal(t *testing.T) {
 								Name:    "actionpack",
 								Version: "7.0.1",
 								Identifier: ftypes.PkgIdentifier{
+									UID: "E8DB2C6E35F8B990",
 									PURL: &packageurl.PackageURL{
 										Type:    packageurl.TypeGem,
 										Name:    "actionpack",
@@ -442,6 +449,7 @@ func TestMarshaler_Marshal(t *testing.T) {
 								Name:    "actionpack",
 								Version: "7.0.1",
 								Identifier: ftypes.PkgIdentifier{
+									UID: "B3E70B2159CFAC50",
 									PURL: &packageurl.PackageURL{
 										Type:    packageurl.TypeGem,
 										Name:    "actionpack",
@@ -649,7 +657,7 @@ func TestMarshaler_Marshal(t *testing.T) {
 			inputReport: types.Report{
 				SchemaVersion: report.SchemaVersion,
 				ArtifactName:  "masahiro331/CVE-2021-41098",
-				ArtifactType:  ftypes.ArtifactFilesystem,
+				ArtifactType:  artifact.TypeFilesystem,
 				Results: types.Results{
 					{
 						Target: "Gemfile.lock",
@@ -818,7 +826,7 @@ func TestMarshaler_Marshal(t *testing.T) {
 			inputReport: types.Report{
 				SchemaVersion: report.SchemaVersion,
 				ArtifactName:  "http://test-aggregate",
-				ArtifactType:  ftypes.ArtifactRepository,
+				ArtifactType:  artifact.TypeRepository,
 				Results: types.Results{
 					{
 						Target: "Node.js",
@@ -937,7 +945,7 @@ func TestMarshaler_Marshal(t *testing.T) {
 			inputReport: types.Report{
 				SchemaVersion: report.SchemaVersion,
 				ArtifactName:  "empty/path",
-				ArtifactType:  ftypes.ArtifactFilesystem,
+				ArtifactType:  artifact.TypeFilesystem,
 				Results:       types.Results{},
 			},
 			wantSBOM: &spdx.Document{
@@ -985,7 +993,7 @@ func TestMarshaler_Marshal(t *testing.T) {
 			inputReport: types.Report{
 				SchemaVersion: report.SchemaVersion,
 				ArtifactName:  "secret",
-				ArtifactType:  ftypes.ArtifactFilesystem,
+				ArtifactType:  artifact.TypeFilesystem,
 				Results: types.Results{
 					{
 						Target: "key.pem",
@@ -1047,7 +1055,7 @@ func TestMarshaler_Marshal(t *testing.T) {
 			inputReport: types.Report{
 				SchemaVersion: report.SchemaVersion,
 				ArtifactName:  "go-artifact",
-				ArtifactType:  ftypes.ArtifactFilesystem,
+				ArtifactType:  artifact.TypeFilesystem,
 				Results: types.Results{
 					{
 						Target: "/usr/local/bin/test",
@@ -1056,12 +1064,13 @@ func TestMarshaler_Marshal(t *testing.T) {
 						Packages: []ftypes.Package{
 							{
 								Name:    "./private_repos/cnrm.googlesource.com/cnrm/",
-								Version: "(devel)",
+								Version: "",
 							},
 							{
 								Name:    "golang.org/x/crypto",
 								Version: "v0.0.1",
 								Identifier: ftypes.PkgIdentifier{
+									UID: "161541A259EF014B",
 									PURL: &packageurl.PackageURL{
 										Type:      packageurl.TypeGolang,
 										Namespace: "golang.org/x",
@@ -1105,10 +1114,9 @@ func TestMarshaler_Marshal(t *testing.T) {
 						},
 					},
 					{
-						PackageSPDXIdentifier:   spdx.ElementID("Package-9a16e221e11f8a90"),
+						PackageSPDXIdentifier:   spdx.ElementID("Package-b1c3b9e2363f5ff7"),
 						PackageDownloadLocation: "NONE",
 						PackageName:             "./private_repos/cnrm.googlesource.com/cnrm/",
-						PackageVersion:          "(devel)",
 						PackageLicenseConcluded: "NONE",
 						PackageLicenseDeclared:  "NONE",
 						PrimaryPackagePurpose:   tspdx.PackagePurposeLibrary,
@@ -1152,7 +1160,7 @@ func TestMarshaler_Marshal(t *testing.T) {
 				Relationships: []*spdx.Relationship{
 					{
 						RefA:         spdx.DocElementID{ElementRefID: "Application-aab0f4e8cf174c67"},
-						RefB:         spdx.DocElementID{ElementRefID: "Package-9a16e221e11f8a90"},
+						RefB:         spdx.DocElementID{ElementRefID: "Package-b1c3b9e2363f5ff7"},
 						Relationship: "CONTAINS",
 					},
 					{
